@@ -242,7 +242,7 @@ class VoiceObjectScanner:
         self.scanning_active = False  # Disable scanning after completion
     def trigger_proximity(self):
         """Checks for objects that are too close and announces warnings."""
-        print("Activating proximity mode for safety...")
+        print("Activating proximity mode...")
         self.synthesize_speech("Activating proximity mode for safety.")
 
         start_time = time.time()

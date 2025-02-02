@@ -12,6 +12,8 @@ from dotenv import load_dotenv
 import os
 from collections import defaultdict
 from threading import Thread
+import easyocr  # Required for OCR functionality
+
 
 class VoiceObjectScanner:
     def __init__(self, model_lang="en-us", scan_duration=5):
@@ -66,6 +68,10 @@ class VoiceObjectScanner:
                     if text.lower() == "scan":
                         self.trigger_scan()
 
+                    #if text.lower() == "read" You are to add this
+                    elif text.lower() == "read":
+                        self.trigger_read()
+
                     elif text.lower() == "stop":
                         self.trigger_stop()
 
@@ -76,6 +82,32 @@ class VoiceObjectScanner:
             self.last_command = "scan"
             self.last_command_time = time.time()
             self.scanning_active = True  # Enable scanning
+
+    def trigger_read(self):
+        """Captures an image from the camera and reads any detected text aloud."""
+        print("Capturing image for text reading...")
+        self.synthesize_speech("Capturing image for text reading.")
+
+        ret, frame = self.cap.read()
+        if not ret:
+            print("Failed to capture image.")
+            self.synthesize_speech("Failed to capture image.")
+            return
+
+        # Initialize EasyOCR reader
+        reader = easyocr.Reader(['en'])
+
+        # Perform OCR on the captured frame
+        results = reader.readtext(frame)
+
+        if results:
+            text_content = " ".join([result[1] for result in results])
+            print(f"Detected Text: {text_content}")
+            self.synthesize_speech(f"The text says: {text_content}")
+        else:
+            print("No readable text detected.")
+            self.synthesize_speech("No readable text detected.")
+
 
     def trigger_stop(self):
         print("Stopping the program.")
@@ -128,6 +160,8 @@ class VoiceObjectScanner:
             if key == ord('q'):
                 self.trigger_stop()
                 break
+            elif key == ord('r'):
+                self.trigger_read()            
             elif key == ord('s'):
                 self.trigger_scan()
 

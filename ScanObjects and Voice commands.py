@@ -20,7 +20,7 @@ class VoiceObjectScanner:
     def __init__(self, model_lang="en-us", scan_duration=5):
         # Load ElevenLabs API key
         load_dotenv()
-        self.client = ElevenLabs(api_key=("sk_d40f3ea9f22be3f67288d1d6daca4c5fba93d665d1b5dafd"))
+        self.client = ElevenLabs(api_key=("sk_a8247cec499ca17c0d1833516844a27edddb0287b8c54d56"))
 
         # Initialize VOSK speech recognition model
         self.model = Model(lang=model_lang)

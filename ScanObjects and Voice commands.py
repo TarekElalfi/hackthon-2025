@@ -75,6 +75,10 @@ class VoiceObjectScanner:
                     #if text.lower() == "read" You are to add this
                     if re.search(r'\b(read|reader|reading|red|either)\b', text_lower):
                         self.trigger_read()
+                        # Add trigger calls in the transcribe_and_store method
+                    if self.listening and re.search(r'\b(safety|say tea|safely)\b', text_lower):
+                        # self.listening = False 
+                        self.trigger_proximity()
 
                     if text.lower() == "stop":
                         self.trigger_stop()
@@ -168,6 +172,12 @@ class VoiceObjectScanner:
                 self.trigger_read()            
             elif key == ord('s'):
                 self.trigger_scan()
+                    # Add keyboard shortcut in run_camera_feed
+            elif self.listening and key == ord('p'):
+                # self.listening = False 
+
+                self.trigger_proximity()
+
 
         self.cap.release()
         cv2.destroyAllWindows()
@@ -230,6 +240,61 @@ class VoiceObjectScanner:
 
         self.summarize_results()
         self.scanning_active = False  # Disable scanning after completion
+    def trigger_proximity(self):
+        """Checks for objects that are too close and announces warnings."""
+        print("Activating proximity mode for safety...")
+        self.synthesize_speech("Activating proximity mode for safety.")
+
+        start_time = time.time()
+        FRAME_AREA = self.frame_width * self.frame_height
+        PROXIMITY_THRESHOLD = 0.66 * FRAME_AREA  # 66% of the frame area
+
+        self.proximity_active = True  # Flag to control proximity mode
+        self.listening = True        # Disable other commands during proximity mode
+
+        while time.time() - start_time < 10:
+            ret, frame = self.cap.read()
+            if not ret:
+                print("Failed to capture frame. Reinitializing camera...")
+                self.cap.release()
+                self.cap = cv2.VideoCapture(0)  # Reinitialize the camera
+                continue
+
+            # Object detection using YOLO
+            results = self.yolo_model.predict(frame, conf=0.5, verbose=False)
+            objects_too_close = False
+
+            for result in results:
+                for box in result.boxes.data:
+                    x1, y1, x2, y2, conf, class_id = box.tolist()
+                    object_area = (x2 - x1) * (y2 - y1)
+
+                    if object_area >= PROXIMITY_THRESHOLD:
+                        objects_too_close = True
+                        break  # No need to check further if one object is too close
+
+                if objects_too_close:
+                    break
+
+            # Continuous feedback based on proximity
+            if objects_too_close:
+                print("⚠️ Watch out! Objects ahead.")
+                self.synthesize_speech("Watch out! Objects ahead.")
+            else:
+                print("✅ Safe ahead.")
+                self.synthesize_speech("Safe ahead.")
+
+            cv2.imshow("YOLO Camera Feed", frame)  # Reuse the main feed window
+
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord('q'):
+                self.trigger_stop()
+                break
+
+        print("Proximity mode deactivated.")
+        self.synthesize_speech("Proximity mode deactivated.")
+        self.proximity_active = False  # Reset flag after exiting proximity mode
+        self.listening = True         # Re-enable listening for commands
 
     def summarize_results(self):
         """Reads out the summary of detected objects."""

@@ -57,6 +57,7 @@ class VoiceObjectScanner:
 
     def transcribe_and_store(self):
         """Continuously listens for voice commands."""
+        self.synthesize_speech("Welcome to see through, You can say the following commands to help you. Say read to capture a text infront of you and read it for you. Say scan to scan your surrounding objects, say safety to detecte proximity objects detection")
         while self.listening:
             data = self.q.get()
             if self.recognizer.AcceptWaveform(data):
@@ -307,28 +308,14 @@ class VoiceObjectScanner:
             self.synthesize_speech("No objects detected during the scan.")
 
     def get_position(self, center_x, center_y):
-        """Determine the object's position in the frame."""
+        """Determine the object's horizontal position in the frame (left, middle, right)."""
         if center_x < self.frame_width * self.THIRD_WIDTH:
-            if center_y < self.frame_height * self.THIRD_HEIGHT:
-                return "top left"
-            elif center_y > self.frame_height * (2 * self.THIRD_HEIGHT):
-                return "bottom left"
-            else:
-                return "left"
+            return "left"
         elif center_x > self.frame_width * (2 * self.THIRD_WIDTH):
-            if center_y < self.frame_height * self.THIRD_HEIGHT:
-                return "top right"
-            elif center_y > self.frame_height * (2 * self.THIRD_HEIGHT):
-                return "bottom right"
-            else:
-                return "right"
+            return "right"
         else:
-            if center_y < self.frame_height * self.THIRD_HEIGHT:
-                return "top middle"
-            elif center_y > self.frame_height * (2 * self.THIRD_HEIGHT):
-                return "bottom middle"
-            else:
-                return "middle"
+            return "middle"
+
 
     def start_listening(self, device=None, samplerate=None):
         """Starts voice recognition and camera feed."""

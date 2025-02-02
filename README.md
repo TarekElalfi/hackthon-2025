@@ -1,8 +1,19 @@
-# hackthon-2025
-Khaled Saleh
+# Hackathon 2025
 
-Moetaz Mohamed
+## Team Members
+- **Khaled Saleh**  
+- **Moetaz Mohamed**  
+- **Mario El Shaer**  
+- **Tarek Elalfi**  
 
-Mario El shaer
+---
 
-Tarek Elalfi
+## Project Setup
+
+To install all the required dependencies, run the following command in the **root directory**:
+
+```bash
+pip install -r requirements.txt
+```
+
+---

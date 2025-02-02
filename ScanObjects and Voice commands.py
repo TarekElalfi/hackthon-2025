@@ -13,6 +13,7 @@ import os
 from collections import defaultdict
 from threading import Thread
 import easyocr  # Required for OCR functionality
+import re
 
 
 class VoiceObjectScanner:
@@ -65,14 +66,17 @@ class VoiceObjectScanner:
                 if text:
                     print(f"Recognized: {text}")
 
-                    if text.lower() == "scan":
+                    # Normalize text to lowercase for consistent matching
+                    text_lower = text.lower()
+
+                    if re.search(r'\b(scan|scam|scanner|scanned|scanners|scandal)\b', text_lower):
                         self.trigger_scan()
 
                     #if text.lower() == "read" You are to add this
-                    elif text.lower() == "read":
+                    if re.search(r'\b(read|reader|reading|red|either)\b', text_lower):
                         self.trigger_read()
 
-                    elif text.lower() == "stop":
+                    if text.lower() == "stop":
                         self.trigger_stop()
 
     def trigger_scan(self):

@@ -64,18 +64,23 @@ class VoiceObjectScanner:
                     print(f"Recognized: {text}")
 
                     if text.lower() == "scan":
-                        if self.last_command != "scan" or time.time() - self.last_command_time > 3:
-                            print("Starting scan...")
-                            self.synthesize_speech("Starting the scan.")
-                            self.last_command = "scan"
-                            self.last_command_time = time.time()
-                            self.scanning_active = True  # Enable scanning
+                        self.trigger_scan()
 
                     elif text.lower() == "stop":
-                        print("Stopping the program.")
-                        self.synthesize_speech("Stopping the program.")
-                        self.listening = False
-                        break
+                        self.trigger_stop()
+
+    def trigger_scan(self):
+        if self.last_command != "scan" or time.time() - self.last_command_time > 3:
+            print("Starting scan...")
+            self.synthesize_speech("Starting the scan.")
+            self.last_command = "scan"
+            self.last_command_time = time.time()
+            self.scanning_active = True  # Enable scanning
+
+    def trigger_stop(self):
+        print("Stopping the program.")
+        self.synthesize_speech("Stopping the program.")
+        self.listening = False
 
     def synthesize_speech(self, text):
         """Converts text to speech using ElevenLabs."""
@@ -119,8 +124,12 @@ class VoiceObjectScanner:
             else:
                 cv2.imshow("YOLO Camera Feed", frame)
 
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord('q'):
+                self.trigger_stop()
                 break
+            elif key == ord('s'):
+                self.trigger_scan()
 
         self.cap.release()
         cv2.destroyAllWindows()
@@ -131,7 +140,7 @@ class VoiceObjectScanner:
         self.summary_counts.clear()
         self.object_history.clear()
 
-        while time.time() - start_time < self.scan_duration:
+        while time.time() - start_time < self.scan_duration and self.listening:
             ret, frame = self.cap.read()
             if not ret:
                 break
@@ -176,7 +185,9 @@ class VoiceObjectScanner:
                     self.summary_counts[key] += count
 
             cv2.imshow("YOLO Camera Feed", frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord('q'):
+                self.trigger_stop()
                 break
 
         self.summarize_results()
@@ -231,7 +242,7 @@ class VoiceObjectScanner:
             # Start voice recognition
             with sd.RawInputStream(samplerate=samplerate, blocksize=8000, device=device,
                                    dtype="int16", channels=1, callback=self.audio_callback):
-                print("Listening for commands... Say 'scan' or 'stop'.")
+                print("Listening for commands... Say 'scan' or 'stop' or press 's' to scan and 'q' to stop.")
                 self.transcribe_and_store()
 
         except KeyboardInterrupt:
